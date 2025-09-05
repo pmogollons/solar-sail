@@ -8,7 +8,9 @@ Package.describe({
 Npm.depends({
   "@sinonjs/fake-timers": "7.0.5",
   "lodash.has": "4.5.2",
+  "lodash.last": "3.0.0",
   "lodash.identity": "3.0.0",
+  "lodash.isfunction": "3.0.9",
 });
 
 Package.onUse((api) => {
