@@ -5,7 +5,7 @@ import "../../common/livedata_connection.js";
 // Initialize the default server connection and put it on Meteor.connection
 import "../../client/client_convenience.js";
 
-import SolarSailModel from "./solar-sail";
+import SolarSailModel from "./solarSail";
 import { engage, disengage } from "./engager";
 
 disengage();
