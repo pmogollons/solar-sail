@@ -3,6 +3,7 @@ import { Tracker } from "meteor/tracker";
 
 import { DDP } from "../../common/namespace";
 import { call, apply, callAsync, applyAsync } from "./rpc";
+import { engage as engageAccounts, disengage as disengageAccounts } from "./accounts";
 
 
 const _methods = [];
@@ -10,12 +11,14 @@ const _methods = [];
 export function engage() {
   if (Meteor.connection._isDummy) {
     createActualConnection();
+    engageAccounts();
   }
 }
 
 export function disengage() {
   if (!Meteor.connection || !Meteor.connection._isDummy) {
     createDummyConnection();
+    disengageAccounts();
   }
 }
 
