@@ -17,6 +17,7 @@ function apply(method, args, options, callback) {
     headers["Meteor-Authorization"] = getToken();
   } catch (e) {
     // Accounts may not be defined at this stage
+    // TODO: Handle this better
   }
 
   fetch(Meteor.absoluteUrl("/__meteor"), {
@@ -29,18 +30,18 @@ function apply(method, args, options, callback) {
     .then(data => callback && callback(undefined, data.result));
 }
 
-async function applyAsync(method, args, options) {
+async function applyAsync(method, args, options, callback) {
   const headers = { "Content-Type": "application/ejson" };
 
   try {
     headers["Meteor-Authorization"] = getToken();
   } catch (e) {
     // Accounts may not be defined at this stage
+    // TODO: Handle this better
   }
 
   return queueFunction(
     (resolve, reject) => {
-      // Your custom fetch logic
       fetch(Meteor.absoluteUrl("/__meteor"), {
         method: "POST",
         headers,
@@ -49,6 +50,14 @@ async function applyAsync(method, args, options) {
         .then(response => response.text())
         .then(text => EJSON.parse(text))
         .then(data => {
+          if (options.wait && options.onResultReceived) {
+            options.onResultReceived(undefined, data.result);
+          }
+
+          if (callback) {
+            callback(undefined, data.result);
+          }
+
           resolve(data.result);
         })
         .catch(err => {
@@ -56,13 +65,12 @@ async function applyAsync(method, args, options) {
         });
     },
     {
-      // You can provide custom promise properties if needed
       stubPromise: new Promise((resolve, reject) => {
         resolve({ result: null });
-      }), // or your stub logic
+      }),
       serverPromise: new Promise((resolve, reject) => {
         resolve({ result: null });
-      }), // or your server logic
+      }),
     }
   );
 }

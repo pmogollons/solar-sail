@@ -67,10 +67,9 @@ WebApp.handlers.post("/__meteor", async function(req, res) {
       )
     );
 
-    res.end(EJSON.stringify(response));
+    res.end(EJSON.stringify({ result: response }));
   } catch (e) {
     console.error(e);
-
     res.statusCode = 500;
     res.end(EJSON.stringify({ reason: e.reason || e.toString() }));
 
