@@ -1,4 +1,5 @@
 import { Meteor } from "meteor/meteor";
+import { Tracker } from "meteor/tracker";
 
 import { DDP } from "../../common/namespace";
 import { call, apply, callAsync, applyAsync } from "./rpc";
@@ -61,7 +62,26 @@ export function createDummyConnection() {
 
   Meteor.connection = {
     _isDummy: true,
+
     _userId: null,
+    _userIdDeps: new Tracker.Dependency(),
+    userId() {
+      if (this._userIdDeps) {
+        this._userIdDeps.depend();
+      }
+      return this._userId;
+    },
+    setUserId(userId) {
+      // Avoid invalidating dependents if setUserId is called with current value.
+      if (this._userId === userId) {
+        return;
+      }
+      this._userId = userId;
+      if (this._userIdDeps) {
+        this._userIdDeps.changed();
+      }
+    },
+
     subscribe() {
       Meteor.isDevelopment && console.warn("You cannot subscribe, the connection is not engaged.");
       return {
@@ -78,7 +98,16 @@ export function createDummyConnection() {
       Meteor.isDevelopment && console.warn("Does not work with .methods() client-side");
     },
     status() {
-      return "offline";
+      return {
+        connected: false,
+        status: "offline",
+        reason: "You are using solar sail",
+        retryCount: 0,
+        retryTime: 0,
+        retryDelay: 0,
+        retryTimeout: 0,
+        retryMaxDelay: 0,
+      };
     },
     reconnect() {},
     disconnect() {},
@@ -86,12 +115,7 @@ export function createDummyConnection() {
     apply,
     callAsync,
     applyAsync,
-    setUserId(userId) {
-      this._userId = userId;
-    },
-    userId() {
-      return this._userId;
-    },
+    _maybeMigrate() {},
     registerStoreClient: () => {},
     _stream: {
       _isStub: true,
