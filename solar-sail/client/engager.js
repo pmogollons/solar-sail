@@ -22,7 +22,7 @@ export function disengage() {
   }
 }
 
-function createActualConnection() {
+async function createActualConnection() {
   let ddpUrl = "/";
   if (typeof __meteor_runtime_config__ !== "undefined") {
     if (__meteor_runtime_config__.DDP_DEFAULT_CONNECTION_URL) {
@@ -47,7 +47,7 @@ function createActualConnection() {
     }
   };
 
-  Meteor.connection = DDP.connect(ddpUrl, {
+  Meteor.connection = await DDP.connect(ddpUrl, {
     onDDPVersionNegotiationFailure: onDDPVersionNegotiationFailure,
   });
 

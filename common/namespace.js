@@ -1,8 +1,6 @@
 import { Meteor } from "meteor/meteor";
 import { DDPCommon } from "meteor/ddp-common";
 
-import { Connection } from "./livedata_connection.js";
-
 
 // This array allows the `_allSubscriptionsReady` method below, which
 // is used by the `spiderable` package, to keep track of whether all
@@ -67,7 +65,8 @@ DDP.randomStream = name => {
  * @param {Object} options._sockjsOptions Specifies options to pass through to the sockjs client
  * @param {Function} options.onDDPNegotiationVersionFailure callback when version negotiation fails.
  */
-DDP.connect = (url, options) => {
+DDP.connect = async (url, options) => {
+  const { Connection } = await import("./livedata_connection.js");
   const ret = new Connection(url, options);
   allConnections.push(ret); // hack. see below.
   return ret;

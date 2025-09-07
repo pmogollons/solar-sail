@@ -1,7 +1,5 @@
 import { DDP } from "../../common/namespace.js";
 
-import "../../common/livedata_connection.js";
-
 // Initialize the default server connection and put it on Meteor.connection
 import "../../client/client_convenience.js";
 
