@@ -47,6 +47,10 @@ async function createActualConnection() {
     }
   };
 
+  const { loadAsyncStubHelpers } = await import("../../client/queue_stub_helpers");
+
+  loadAsyncStubHelpers();
+
   Meteor.connection = await DDP.connect(ddpUrl, {
     onDDPVersionNegotiationFailure: onDDPVersionNegotiationFailure,
   });
