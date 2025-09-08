@@ -10,39 +10,32 @@ const _methods = [];
 
 export function engage() {
   if (Meteor.connection._isDummy) {
-    createActualConnection();
     engageAccounts();
+    createActualConnection();
   }
 }
 
 export function disengage() {
   if (!Meteor.connection || !Meteor.connection._isDummy) {
-    createDummyConnection();
     disengageAccounts();
+    createDummyConnection();
   }
 }
 
 async function createActualConnection() {
-  let ddpUrl = "/";
-  if (typeof __meteor_runtime_config__ !== "undefined") {
-    if (__meteor_runtime_config__.DDP_DEFAULT_CONNECTION_URL) {
-      ddpUrl = __meteor_runtime_config__.DDP_DEFAULT_CONNECTION_URL;
-    }
-  }
-
+  Meteor.refresh = () => {};
+  const ddpUrl = __meteor_runtime_config__?.DDP_DEFAULT_CONNECTION_URL || "/";
   const retry = new Retry();
 
   const onDDPVersionNegotiationFailure = function(description) {
     Meteor._debug(description);
     if (Package.reload) {
-      const migrationData = Package.reload.Reload._migrationData("livedata") || {};
+      const migrationData = Package.reload.Reload._migrationData("livedata") || Object.create(null);
       let failures = migrationData.DDPVersionNegotiationFailures || 0;
       ++failures;
-      Package.reload.Reload._onMigrate("livedata", function() {
-        return [true, { DDPVersionNegotiationFailures: failures }];
-      });
-      retry.retryLater(failures, function() {
-        Package.reload.Reload._reload();
+      Package.reload.Reload._onMigrate("livedata", () => [true, { DDPVersionNegotiationFailures: failures }]);
+      retry.retryLater(failures, () => {
+        Package.reload.Reload._reload({ immediateMigration: true });
       });
     }
   };
@@ -54,6 +47,8 @@ async function createActualConnection() {
   Meteor.connection = await DDP.connect(ddpUrl, {
     onDDPVersionNegotiationFailure: onDDPVersionNegotiationFailure,
   });
+  Accounts.connection = Meteor.connection;
+  // TODO: Some connections might be still using the old dummy connection
 
   _mirrorMeteorObject();
 
@@ -122,6 +117,7 @@ export function createDummyConnection() {
     apply,
     callAsync,
     applyAsync,
+    isAsyncCall: () => false,
     _maybeMigrate() {},
     registerStoreClient: () => {},
     _stream: {
@@ -136,6 +132,7 @@ function _mirrorMeteorObject() {
   [
     "subscribe",
     "methods",
+    "isAsyncCall",
     "call",
     "apply",
     "callAsync",
