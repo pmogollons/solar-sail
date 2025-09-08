@@ -1,3 +1,4 @@
+/* global Accounts: true, __meteor_runtime_config__: true,Package: true,Retry: true */
 import { Meteor } from "meteor/meteor";
 import { Tracker } from "meteor/tracker";
 
@@ -40,9 +41,13 @@ async function createActualConnection() {
     }
   };
 
-  const { loadAsyncStubHelpers } = await import("../../client/queue_stub_helpers");
+  if (!Meteor._stubsLoaded) {
+    const { loadAsyncStubHelpers } = await import("../../client/queue_stub_helpers");
 
-  loadAsyncStubHelpers();
+    loadAsyncStubHelpers();
+
+    Meteor._stubsLoaded = true;
+  }
 
   Meteor.connection = await DDP.connect(ddpUrl, {
     onDDPVersionNegotiationFailure: onDDPVersionNegotiationFailure,
@@ -124,6 +129,9 @@ export function createDummyConnection() {
       _isStub: true,
     },
   };
+  Meteor.startup(() => {
+    Accounts.connection = Meteor.connection;
+  });
 
   _mirrorMeteorObject();
 }
