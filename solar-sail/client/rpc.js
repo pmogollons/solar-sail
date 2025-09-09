@@ -47,7 +47,15 @@ async function applyAsync(method, args, options, callback) {
         headers,
         body: EJSON.stringify({ method, args }),
       })
-        .then(response => response.text())
+        .then(async (response) => {
+          if (response.ok) {
+            return response.text();
+          }
+
+          const responseData = await response.json();
+
+          throw new Error(responseData.reason);
+        })
         .then(text => EJSON.parse(text))
         .then(data => {
           if (options.wait && options.onResultReceived) {
